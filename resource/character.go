@@ -3,13 +3,24 @@ package resource
 type Response struct {
 	Data Data `json:"data"`
 }
+type RestResponse struct {
+	Character  Character `json:"character"`
+	Cooldown   Cooldown  `json:"cooldown"`
+	HPRestored int       `json:"hp_restored"`
+}
+
+type FightResponse struct {
+	Character Character `json:"character"`
+	Fight     Fight     `json:"fight"`
+	Cooldown  Cooldown  `json:"cooldown"`
+}
 type Data struct {
-	Character       `json:",inline,omitempty"`
-	NestedCharacter Character   `json:"character,omitempty"`
-	Cooldown        Cooldown    `json:"cooldown,omitempty"`
-	Destination     Destination `json:"destination,omitempty"`
-	Fight           Fight       `json:"fight,omitempty"`
-	HPRestored      int         `json:"hp_restored,omitempty"`
+	Character       `json:",inline"`
+	NestedCharacter Character   `json:"character"`
+	Cooldown        Cooldown    `json:"cooldown"`
+	Destination     Destination `json:"destination"`
+	Fight           Fight       `json:"fight"`
+	HPRestored      int         `json:"hp_restored"`
 }
 type Character struct {
 	Name                    string `json:"name"`
@@ -59,7 +70,7 @@ type Character struct {
 	ResAir                  int    `json:"res_air"`
 	XLoc                    int    `json:"x"`
 	YLoc                    int    `json:"y"`
-	Cooldown                int    `json:"cooldown,omitempty"`
+	Cooldown                int    `json:"cooldown"`
 	CooldownExpiration      string `json:"cooldown_expiration"`
 	WeaponSlot              string `json:"weapon_slot"`
 	ShieldSlot              string `json:"shield_slot"`
@@ -113,11 +124,11 @@ type Content struct {
 type Fight struct {
 	XP                 int                `json:"xp"`
 	Gold               int                `json:"gold"`
-	Drops              Drops              `json:"drops"`
+	Drops              []Drops            `json:"drops"`
 	Turns              int                `json:"turns"`
 	MonsterBlockedHits MonsterBlockedHits `json:"monster_blocked_hits"`
 	PlayerBlockedHits  PlayerBlockedHits  `json:"player_blocked_hits"`
-	Logs               map[string]string  `json:"logs"`
+	Logs               []string           `json:"logs"`
 	Result             string             `json:"result"`
 }
 

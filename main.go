@@ -8,6 +8,7 @@ import (
 	"github.com/circleci/ex/httpclient"
 	"log"
 	"os"
+	"time"
 )
 
 func main() {
@@ -26,28 +27,29 @@ func main() {
 	//}
 	//fmt.Printf("Character moved to %d, %d.\n", resp.Destination.X, resp.Destination.Y)
 
-	//resp, err := Fight(ctx, artifactHTTPClient)
-	//if err != nil {
-	//	fmt.Println(err)
-	//}
-	//fmt.Println(resp.Character.Hp)
-	//fmt.Printf("Fight logs: %s\nCurrent HP: %d", resp.Fight.Logs, resp.Character.Hp)
-
-	resp, err := Rest(ctx, artifactHTTPClient)
+	fightResp, err := Fight(ctx, artifactHTTPClient)
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Print(resp.Character.Hp)
-	getCharacter(ctx, artifactHTTPClient)
-}
+	fmt.Printf("Current HP after Fight: %d\nCurrent cooldown is: %d\nFight Logs: %s\n", fightResp.Character.Hp, fightResp.Cooldown.TotalSeconds, fightResp.Fight.Logs)
+	cooldown := time.Duration(fightResp.Cooldown.TotalSeconds)
+	time.Sleep(cooldown * time.Second)
+	//if fightResp.Cooldown.TotalSeconds == 0 {
+	//	fmt.Println("We're resting now!")
+	//	restResp, err := Rest(ctx, artifactHTTPClient)
+	//	if err != nil {
+	//		fmt.Println(err)
+	//	}
+	//	fmt.Printf("Current HP: %v\n", restResp.Character.Hp)
+	//}
+	restResp, err := Rest(ctx, artifactHTTPClient)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Printf("Current HP: %v\n", restResp.Character.Hp)
+	fmt.Printf("Curernt cooldown is: %d\n", restResp.Character.Cooldown)
 
-type Asdasd struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-}
-
-type Data struct {
-	Data Asdasd `json:"data"`
+	//getCharacter(ctx, artifactHTTPClient)
 }
 
 type CharacterResponse struct {
@@ -158,9 +160,11 @@ func MoveCharacter(ctx context.Context, client *httpclient.Client, x, y int) (re
 	return resp.Data, nil
 }
 
-func Fight(ctx context.Context, client *httpclient.Client) (resource.Data, error) {
+func Fight(ctx context.Context, client *httpclient.Client) (resource.FightResponse, error) {
 	req := httpclient.NewRequest("POST", "/my/Logan/action/fight")
-	resp := resource.Response{}
+	resp := struct {
+		Data resource.FightResponse `json:"data"`
+	}{}
 	httpclient.JSONDecoder(&resp)(&req) //I need a refresher on what this does and why it's needed here.
 	err := client.Call(ctx, req)
 	if err != nil {
@@ -185,12 +189,14 @@ func Fight(ctx context.Context, client *httpclient.Client) (resource.Data, error
 	return resp.Data, nil
 }
 
-func Rest(ctx context.Context, client *httpclient.Client) (resource.Data, error) {
+func Rest(ctx context.Context, client *httpclient.Client) (resource.RestResponse, error) {
 	req := httpclient.NewRequest("POST", "/my/Logan/action/rest")
-	resp := resource.Response{}
-	httpclient.JSONDecoder(&resp)(&req)
+	resp := struct {
+		Data resource.RestResponse `json:"data"`
+	}{}
+	responseDecoderSetter := httpclient.JSONDecoder(&resp)
+	responseDecoderSetter(&req)
 	err := client.Call(ctx, req)
-	fmt.Println(resp)
 	if err != nil {
 		if isError := httpclient.HasStatusCode(err, 486, 498, 499); isError {
 			switch err.(*httpclient.HTTPError).Code() {
